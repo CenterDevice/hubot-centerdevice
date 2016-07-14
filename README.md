@@ -1,6 +1,6 @@
 # hubot-centerdevice
 
-[![Build Status](https://travis-ci.org/centerdevice/hubot-centerdevice.svg?branch=master)](https://travis-ci.org/centerdevice/hubot-centerdevice)
+[![Build Status](https://travis-ci.org/CenterDevice/hubot-centerdevice.svg?branch=master)](https://travis-ci.org/CenterDevice/hubot-centerdevice)
 
 [![NPM](https://nodei.co/npm/hubot-centerdevice.png)](https://nodei.co/npm/hubot-centerdevice/)
 
