@@ -63,6 +63,20 @@ module.exports = (robot) ->
       user_name = res.envelope.user.name
       logger.info "#{module_name}: finished deployment requested by #{user_name}."
 
+      unless robot.brain.get "centerdevice.#{event_name}.silence_id"
+        res.reply "Hm, there's no active Bosun silence. You're sure there's a deployment going on?"
+      else
+        res.reply "Ok, let clear the Bosun silence for your deployment ..."
+
+        event_name = "bosun.clear_silence"
+        prepare_timeout event_name robot.brain
+        logger.debug "#{module_name}: emitting request for Bosun clear silence."
+        robot.emit event_name,
+          user: res.envelope.user
+          room: res.envelope.room
+          silence_id: robot.brain.set "centerdevice.#{event_name}.silence_id"
+
+        set_timeout event_name robot.brain, res
 
   robot.on 'bosun.set_silence.successful', (event) ->
     event_name = "bosun.set_silence"

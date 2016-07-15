@@ -22,79 +22,85 @@ describe 'centerdevice', ->
 
     context "authorized user", ->
 
-      context "start deployment successfully", ->
-        beforeEach ->
-          robot = @room.robot
-          @room.robot.on 'bosun.set_silence', (event) ->
-            robot.emit 'bosun.set_silence.successful',
-              user: event.user
-              room: event.room
-              duration: "10m"
-              silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
-          co =>
-            yield @room.user.say 'alice', '@hubot starting centerdevice deployment'
-            yield new Promise.delay 50
+      context "start deployment", ->
 
-        it "start deployment", ->
-          expect(@room.messages).to.eql [
-            ['alice', '@hubot starting centerdevice deployment']
-            ['hubot', '@alice Set Bosun silence successful for 10m with id 6e89533c74c3f9b74417b37e7cce75c384d29dc7.']
-            ['hubot', '@alice Ok, let me silence Bosun for your deployment ...']
-          ]
-          expect(@room.robot.brain.get "centerdevice.bosun.set_silence.silence_id" ).to.eql "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
-          expect(@room.robot.brain.get "centerdevice.bosun.set_silence.timeout" ).to.eql null
-          expect(@room.robot.brain.get "centerdevice.bosun.set_silence.pending" ).to.eql null
+        context "start deployment successfully", ->
+          beforeEach ->
+            robot = @room.robot
+            @room.robot.on 'bosun.set_silence', (event) ->
+              robot.emit 'bosun.set_silence.successful',
+                user: event.user
+                room: event.room
+                duration: "10m"
+                silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
+            co =>
+              yield @room.user.say 'alice', '@hubot starting centerdevice deployment'
+              yield new Promise.delay 50
 
-      context "start deployment failed", ->
-        beforeEach ->
-          robot = @room.robot
-          @room.robot.on 'bosun.set_silence', (event) ->
-            robot.emit 'bosun.set_silence.failed',
-              user: event.user
-              room: event.room
-              message: "Bosun failed."
-          co =>
-            yield @room.user.say 'alice', '@hubot starting centerdevice deployment'
-            yield new Promise.delay 50
+          it "start deployment", ->
+            expect(@room.messages).to.eql [
+              ['alice', '@hubot starting centerdevice deployment']
+              ['hubot', '@alice Set Bosun silence successful for 10m with id 6e89533c74c3f9b74417b37e7cce75c384d29dc7.']
+              ['hubot', '@alice Ok, let me silence Bosun for your deployment ...']
+            ]
+            expect(@room.robot.brain.get "centerdevice.bosun.set_silence.silence_id" ).to.eql "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
+            expect(@room.robot.brain.get "centerdevice.bosun.set_silence.timeout" ).to.eql null
+            expect(@room.robot.brain.get "centerdevice.bosun.set_silence.pending" ).to.eql null
 
-        it "start deployment", ->
-          expect(@room.messages).to.eql [
-            ['alice', '@hubot starting centerdevice deployment']
-            ['hubot', '@alice Oouch: Failed to set Bosun silence because Bosun failed.']
-            ['hubot', '@alice Ok, let me silence Bosun for your deployment ...']
-          ]
-          expect(@room.robot.brain.get "centerdevice.bosun.set_silence.silence_id" ).to.eql null
-          expect(@room.robot.brain.get "centerdevice.bosun.set_silence.timeout" ).to.eql null
-          expect(@room.robot.brain.get "centerdevice.bosun.set_silence.pending" ).to.eql null
+        context "start deployment failed", ->
+          beforeEach ->
+            robot = @room.robot
+            @room.robot.on 'bosun.set_silence', (event) ->
+              robot.emit 'bosun.set_silence.failed',
+                user: event.user
+                room: event.room
+                message: "Bosun failed."
+            co =>
+              yield @room.user.say 'alice', '@hubot starting centerdevice deployment'
+              yield new Promise.delay 50
 
-      context "start deployment timed out", ->
-        beforeEach ->
-          co =>
-            yield @room.user.say 'alice', '@hubot starting centerdevice deployment'
-            yield new Promise.delay 200
+          it "start deployment", ->
+            expect(@room.messages).to.eql [
+              ['alice', '@hubot starting centerdevice deployment']
+              ['hubot', '@alice Oouch: Failed to set Bosun silence because Bosun failed.']
+              ['hubot', '@alice Ok, let me silence Bosun for your deployment ...']
+            ]
+            expect(@room.robot.brain.get "centerdevice.bosun.set_silence.silence_id" ).to.eql null
+            expect(@room.robot.brain.get "centerdevice.bosun.set_silence.timeout" ).to.eql null
+            expect(@room.robot.brain.get "centerdevice.bosun.set_silence.pending" ).to.eql null
 
-        it "start deployment", ->
-          expect(@room.messages).to.eql [
-            ['alice', '@hubot starting centerdevice deployment']
-            ['hubot', '@alice Ok, let me silence Bosun for your deployment ...']
-            ['hubot', '@alice Ouuch, request for bosun.set_silence timed out ... sorry.']
-          ]
-          expect(@room.robot.brain.get "centerdevice.bosun.set_silence.silence_id" ).to.eql null
-          expect(@room.robot.brain.get "centerdevice.bosun.set_silence.timeout" ).to.eql null
-          expect(@room.robot.brain.get "centerdevice.bosun.set_silence.pending" ).to.eql null
+        context "try to start deployment with  pending silence", ->
+          it "start deployment"
+
+        context "start deployment timed out", ->
+          beforeEach ->
+            co =>
+              yield @room.user.say 'alice', '@hubot starting centerdevice deployment'
+              yield new Promise.delay 200
+
+          it "start deployment", ->
+            expect(@room.messages).to.eql [
+              ['alice', '@hubot starting centerdevice deployment']
+              ['hubot', '@alice Ok, let me silence Bosun for your deployment ...']
+              ['hubot', '@alice Ouuch, request for bosun.set_silence timed out ... sorry.']
+            ]
+            expect(@room.robot.brain.get "centerdevice.bosun.set_silence.silence_id" ).to.eql null
+            expect(@room.robot.brain.get "centerdevice.bosun.set_silence.timeout" ).to.eql null
+            expect(@room.robot.brain.get "centerdevice.bosun.set_silence.pending" ).to.eql null
 
       context "finish deployment", ->
 
-        it "finish deployment successfully"
-          #robot.brain.set "centerdevice.bosun.silence.id", 6e89533c74c3f9b74417b37e7cce75c384d29dc7
-          #@room.user.say('alice', '@hubot finished centerdevice deployment').then =>
-            #expect(@room.messages).to.eql [
-              #['alice', '@hubot starting centerdevice deployment']
-              #['hubot', 'Ok, I clear the Bosun silence ...']
-            #]
-            #expect(@room.robot.brain.get "centerdevice.bosun.silence.id" ).to.eql null
+        context "finish deployment successfully", ->
+          it "finish deployment"
 
-        it "finish deployment failed"
+        context "finish deployment failed", ->
+          it "finish deployment"
+
+        context "try to finish deployment with no pending silence", ->
+          it "finish deployment"
+
+        context "finish deployment timed out", ->
+          it "finish deployment"
 
     context "unauthorized user", ->
 
@@ -117,7 +123,7 @@ describe 'centerdevice', ->
 setup_test_env = (env) ->
   process.env.HUBOT_CENTERDEVICE_ROLE = "centerdevice"
   process.env.HUBOT_DEPLOYMENT_SILENCE_DURATION = "10m"
-  process.env.HUBOT_CENTERDEVICE_LOG_LEVEL = "debug"
+  process.env.HUBOT_CENTERDEVICE_LOG_LEVEL = "error"
   process.env.HUBOT_BOSUN_TIMEOUT = 100
 
   helper = new Helper('../src/centerdevice.coffee')
