@@ -10,6 +10,7 @@ after_success: |
   echo "TRAVIS_NODE_VERSION=${TRAVIS_NODE_VERSION}"
 deploy:
   provider: npm
+  email: lukas.pustina@gmail.com
   api_key:
     secure: hQFZ9QBm95kdzRm8BLDN4kOsYXujiKVMVe0/uDmDx3Yhy/t8/odYsxXFTQH0ix5vJJptfZb/e1QS5a53FhQQ1TDNuB9AnzH5H5ukxVQ9UqqV3npPDiu+niFCcSiJHSZ+IQdej9WPBpP7sxTmKZr8AcKr9y+cYAiTUSrYhhV28TzXJIDwp7OZDfAQb17ys05BDrHOOGEjaKcf48eq+YPv2ijEgTXnBgFKmlRo1CDxqyeZ1zJTmQgIALttX/DbOxu2Kz/PJRvr1L9F2WmtkpIIsB0h0naJjZSF8t3sni63q8NZncTluznJYiVl4NZpEC+5JuX89I/xJy3RISmL//k6sFWiY23gPGgyJHndI1UxL9njfH8z+en+1fJDlogtg8AzyF3g0tfzXkVX6Msj7xHZKV3IVyIZwjBTYvaBL88i92uJHVA7X0MzEHQsE6skfS/OuDVRmPpJ1R5tjhaYEcsRjGTAepMh+lje5fUOslnFYFqeNfMze3XMiWZ1ND+f0cSJGb9re3jnmutArA1/lfi0aa30iAbFFKud0mrzbLeSZOkOGtUxnD4OJui09vbNHRn1++MZHqX9/vil0oXjuMhUnNyB9x7Pl3+z7/gjWr/XUMxz4UY/z94WFh79K09dvsiErHkdQCor4WK+B1sf5MCCDdhluNIbWz6lpfuRrOxlRiI=
   on:
