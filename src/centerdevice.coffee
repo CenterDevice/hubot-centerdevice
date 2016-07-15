@@ -43,32 +43,35 @@ module.exports = (robot) ->
       user_name = res.envelope.user.name
       logger.info "#{module_name}: starting deployment requested by #{user_name}."
 
-      res.reply "Ok, let me silence Bosun for your deployment ..."
-
       event_name = "bosun.set_silence"
-      prepare_timeout event_name, robot.brain
-      logger.debug "#{module_name}: emitting request for Bosun silence."
-      robot.emit event_name,
-        user: res.envelope.user
-        room: res.envelope.room
-        duration: config.deployment_silence_duration
-        alert: ""
-        tags: ""
-        message: ""
+      if silence_id = robot.brain.get "centerdevice.#{event_name}.silence_id"
+        res.reply "Ouuch, there's already a deployment silence with id #{silence_id} pending. Finish that deployment and ask Bosun for active silences."
+      else
+        res.reply "Ok, let me silence Bosun for your deployment ..."
 
-      set_timeout event_name, robot.brain, res
+        prepare_timeout event_name, robot.brain
+        logger.debug "#{module_name}: emitting request for Bosun silence."
+        robot.emit event_name,
+          user: res.envelope.user
+          room: res.envelope.room
+          duration: config.deployment_silence_duration
+          alert: ""
+          tags: ""
+          message: ""
+
+        set_timeout event_name, robot.brain, res
 
   robot.respond /finished centerdevice deployment/i, (res) ->
     if is_authorized robot, res
       user_name = res.envelope.user.name
       logger.info "#{module_name}: finished deployment requested by #{user_name}."
 
-      unless robot.brain.get "centerdevice.#{event_name}.silence_id"
+      event_name = "bosun.clear_silence"
+      unless robot.brain.get "centerdevice.bosun.silence.silence_id"
         res.reply "Hm, there's no active Bosun silence. You're sure there's a deployment going on?"
       else
         res.reply "Ok, let clear the Bosun silence for your deployment ..."
 
-        event_name = "bosun.clear_silence"
         prepare_timeout event_name robot.brain
         logger.debug "#{module_name}: emitting request for Bosun clear silence."
         robot.emit event_name,

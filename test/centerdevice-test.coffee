@@ -70,7 +70,15 @@ describe 'centerdevice', ->
             expect(@room.robot.brain.get "centerdevice.bosun.set_silence.pending" ).to.eql null
 
         context "try to start deployment with  pending silence", ->
-          it "start deployment"
+          beforeEach ->
+            @room.robot.brain.set "centerdevice.bosun.set_silence.silence_id", "dd406bdce72df2e8c69b5ee396126a7ed8f3bf44"
+            @room.user.say 'alice', '@hubot starting centerdevice deployment'
+
+          it "start deployment", ->
+            expect(@room.messages).to.eql [
+              ['alice', '@hubot starting centerdevice deployment']
+              ['hubot', "@alice Ouuch, there's already a deployment silence with id dd406bdce72df2e8c69b5ee396126a7ed8f3bf44 pending. Finish that deployment and ask Bosun for active silences."]
+            ]
 
         context "start deployment timed out", ->
           beforeEach ->
