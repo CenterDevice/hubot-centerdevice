@@ -11,6 +11,15 @@
 #   lukas.pustina@centerdevice.de
 #
 # Todos:
+# - Use Cases:
+#   - starting centerdevice deployment
+#     - carl: Okay, let me silence Bosun -> emit silence, save silence id, user in brain
+#   - finished centerdevice deployment
+#     - carl: Okay, I clear the silence -> emit clear silence with saved id
+#   - Silence expired
+#     - if deployment, check every <interval> if silence expired and if true, send message to user
+#   - Deployment expired
+#     - Expire an active deployment after <interval> — in case somebody forgot to finish a deployment
 
 request = require 'request'
 Log = require 'log'
