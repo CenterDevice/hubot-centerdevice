@@ -17,4 +17,3 @@ deploy:
     tags: true
     condition:
     - "$TRAVIS_NODE_VERSION == 4"
-    repo: lukaspustina/hubot-centerdevice
