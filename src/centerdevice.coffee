@@ -6,6 +6,7 @@
 #   HUBOT_DEPLOYMENT_SILENCE_DURATION -- Duration of deployment silence, default is 15m
 #   HUBOT_CENTERDEVICE_LOG_LEVEL -- Log level, default is "info"
 #   HUBOT_CENTERDEVICE_BOSUN_TIMEOUT -- Timeout to wait for Bosun to react, default is 30000 ms
+#   HUBOT_CENTERDEVICE_SILENCE_CHECK_INTERVAL -- Interval to check, if Bosun silence is still active
 #
 # Commands:
 #   start(ing) centerdevice deployment -- automatically sets Bosun silence for `HUBOT_DEPLOYMENT_SILENCE_DURATION`
@@ -17,11 +18,6 @@
 #   lukas.pustina@centerdevice.de
 #
 # Todos:
-# - Use Cases:
-#   - Silence expired
-#     - if deployment, check every <interval> if silence expired and if true, send message to user
-#   - Deployment expired
-#     - Expire an active deployment after <interval> — in case somebody forgot to finish a deployment
 
 Log = require 'log'
 moment = require 'moment'
@@ -30,8 +26,9 @@ module_name = "hubot-centerdevice"
 config =
   deployment_silence_duration: process.env.HUBOT_DEPLOYMENT_SILENCE_DURATION or "15m"
   log_level: process.env.HUBOT_CENTERDEVICE_LOG_LEVEL or "info"
-  timeout: if process.env.HUBOT_CENTERDEVICE_BOSUN_TIMEOUT then parseInt process.env.HUBOT_CENTERDEVICE_BOSUN_TIMEOUT else 30000
   role: process.env.HUBOT_CENTERDEVICE_ROLE
+  silence_check_interval: if process.env.HUBOT_CENTERDEVICE_SILENCE_CHECK_INTERVAL then parseInt process.env.HUBOT_CENTERDEVICE_SILENCE_CHECK_INTERVAL else 60000
+  timeout: if process.env.HUBOT_CENTERDEVICE_BOSUN_TIMEOUT then parseInt process.env.HUBOT_CENTERDEVICE_BOSUN_TIMEOUT else 30000
 
 logger = new Log config.log_level
 logger.notice "#{module_name}: Started."
@@ -94,6 +91,8 @@ module.exports = (robot) ->
       robot.brain.set "centerdevice.#{event_name}.silence_id", event.silence_id
       robot.reply {room: event.room, user: event.user}, "Set Bosun silence successfully for #{event.duration} with id #{event.silence_id}."
 
+      set_silence_checker {room: event.room, user: event.user, silence_id: event.silence_id}, robot
+
 
   robot.on 'bosun.set_silence.failed', (event) ->
     event_name = "bosun.set_silence"
@@ -124,6 +123,16 @@ module.exports = (robot) ->
       robot.reply {room: event.room, user: event.user}, "Oouch: Failed to clear Bosun silence with id #{event.silence_id}, because #{event.message} Please talk directly to Bosun to clear the silence."
 
 
+  robot.on 'bosun.check_silence.result', (event) ->
+    if event.active
+      logger.debug "#{module_name}: currently set silence is still active."
+      set_silence_checker event, robot
+    else
+      logger.debug "#{module_name}: currently set silence became inactive."
+      clear_silence_checker
+      robot.brain.remove "centerdevice.bosun.set_silence.silence_id"
+      robot.reply {room: event.room, user: event.user}, "Hey, your Bosun silence with id #{event.silence_id} expired, but it seems you're stil deploying?! Are you okay?"
+
 
   robot.error (err, res) ->
     robot.logger.error "#{module_name}: DOES NOT COMPUTE"
@@ -151,6 +160,19 @@ clear_timeout = (name, brain) ->
   brain.remove "centerdevice.#{name}.pending"
   clearTimeout brain.get "centerdevice.#{name}.timeout"
   brain.remove "centerdevice.#{name}.timeout"
+
+set_silence_checker = (context, robot) ->
+  active_silence_id = robot.brain.get "centerdevice.bosun.set_silence.silence_id"
+  if active_silence_id is context.silence_id
+    logger.debug "#{module_name}: setting timeout for Bosun silence checker #{config.silence_check_interval} ms."
+    robot.brain.set "centerdevice.set_silence.checker.timeout", setTimeout () ->
+      logger.debug "#{module_name}: Emitting request to Bosun to check if silence with id #{context.silence_id} is still active."
+      robot.emit 'bosun.check_silence', context
+    , config.silence_check_interval
+
+clear_silence_checker = (brain) ->
+  clearTimeout robot.brain.get "centerdevice.set_silence.checker.timeout"
+  robot.brain.remove "centerdevice.set_silence.checker.timeout"
 
 is_authorized = (robot, res) ->
   user = res.envelope.user

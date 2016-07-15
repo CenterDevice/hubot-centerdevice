@@ -47,6 +47,37 @@ describe 'centerdevice', ->
             expect(@room.robot.brain.get "centerdevice.bosun.set_silence.timeout" ).to.eql null
             expect(@room.robot.brain.get "centerdevice.bosun.set_silence.pending" ).to.eql null
 
+        context "start deployment successfully and silence expires", ->
+          beforeEach ->
+            robot = @room.robot
+            @room.robot.on 'bosun.set_silence', (event) ->
+              robot.emit 'bosun.set_silence.successful',
+                user: event.user
+                room: event.room
+                duration: "1s"
+                silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
+            @room.robot.on 'bosun.check_silence', (event) ->
+              robot.emit 'bosun.check_silence.result',
+                user: event.user
+                room: event.room
+                silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
+                active: false
+            co =>
+              yield @room.user.say 'alice', '@hubot starting centerdevice deployment'
+              yield new Promise.delay 1100
+
+          it "start deployment", ->
+            expect(@room.messages).to.eql [
+              ['alice', '@hubot starting centerdevice deployment']
+              ['hubot', '@alice Set Bosun silence successfully for 1s with id 6e89533c74c3f9b74417b37e7cce75c384d29dc7.']
+              ['hubot', '@alice Ok, let me silence Bosun for your deployment ...']
+              ['hubot', "@alice Hey, your Bosun silence with id 6e89533c74c3f9b74417b37e7cce75c384d29dc7 expired, but it seems you're stil deploying?! Are you okay?"]
+            ]
+            expect(@room.robot.brain.get "centerdevice.bosun.set_silence.silence_id" ).to.eql null
+            expect(@room.robot.brain.get "centerdevice.bosun.set_silence.timeout" ).to.eql null
+            expect(@room.robot.brain.get "centerdevice.bosun.set_silence.pending" ).to.eql null
+
+
         context "start deployment failed", ->
           beforeEach ->
             robot = @room.robot
@@ -194,8 +225,9 @@ describe 'centerdevice', ->
 setup_test_env = (env) ->
   process.env.HUBOT_CENTERDEVICE_ROLE = "centerdevice"
   process.env.HUBOT_DEPLOYMENT_SILENCE_DURATION = "10m"
-  process.env.HUBOT_CENTERDEVICE_LOG_LEVEL = "error"
+  process.env.HUBOT_CENTERDEVICE_LOG_LEVEL = "debug"
   process.env.HUBOT_CENTERDEVICE_BOSUN_TIMEOUT = 100
+  process.env.HUBOT_CENTERDEVICE_SILENCE_CHECK_INTERVAL = 200
 
   helper = new Helper('../src/centerdevice.coffee')
   room = helper.createRoom()
