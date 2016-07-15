@@ -2,8 +2,14 @@
 #   DevOps for CenterDevice via Hubot
 #
 # Configuration:
+#   HUBOT_CENTERDEVICE_ROLE -- Auth role required, e.g., "centerdevice"
+#   HUBOT_DEPLOYMENT_SILENCE_DURATION -- Duration of deployment silence, default is 15m
+#   HUBOT_CENTERDEVICE_LOG_LEVEL -- Log level, default is "info"
+#   HUBOT_CENTERDEVICE_BOSUN_TIMEOUT -- Timeout to wait for Bosun to react, default is 30000 ms
 #
 # Commands:
+#   start(ing) centerdevice deployment -- automatically sets Bosun silence for `HUBOT_DEPLOYMENT_SILENCE_DURATION`
+#   finish(ed) centerdevice deployment -- automatically clears previously created Bosun silence
 #
 # Notes:
 #
@@ -12,8 +18,6 @@
 #
 # Todos:
 # - Use Cases:
-#   - finished centerdevice deployment
-#     - carl: Okay, I clear the silence -> emit clear silence with saved id
 #   - Silence expired
 #     - if deployment, check every <interval> if silence expired and if true, send message to user
 #   - Deployment expired
@@ -26,8 +30,8 @@ module_name = "hubot-centerdevice"
 config =
   deployment_silence_duration: process.env.HUBOT_DEPLOYMENT_SILENCE_DURATION or "15m"
   log_level: process.env.HUBOT_CENTERDEVICE_LOG_LEVEL or "info"
-  timeout: if process.env.HUBOT_BOSUN_TIMEOUT then parseInt process.env.HUBOT_BOSUN_TIMEOUT else 10000
-  role: process.env.HUBOT_CENTERDEVICE_ROLE or ""
+  timeout: if process.env.HUBOT_CENTERDEVICE_BOSUN_TIMEOUT then parseInt process.env.HUBOT_CENTERDEVICE_BOSUN_TIMEOUT else 30000
+  role: process.env.HUBOT_CENTERDEVICE_ROLE
 
 logger = new Log config.log_level
 logger.notice "#{module_name}: Started."
@@ -36,7 +40,7 @@ logger.notice "#{module_name}: Started."
 
 module.exports = (robot) ->
 
-  robot.respond /starting centerdevice deployment/i, (res) ->
+  robot.respond /start.* centerdevice deployment/i, (res) ->
     if is_authorized robot, res
       user_name = res.envelope.user.name
       logger.info "#{module_name}: starting deployment requested by #{user_name}."
@@ -60,7 +64,7 @@ module.exports = (robot) ->
         set_timeout event_name, robot.brain, res
 
 
-  robot.respond /finished centerdevice deployment/i, (res) ->
+  robot.respond /finish.* centerdevice deployment/i, (res) ->
     if is_authorized robot, res
       user_name = res.envelope.user.name
       logger.info "#{module_name}: finished deployment requested by #{user_name}."

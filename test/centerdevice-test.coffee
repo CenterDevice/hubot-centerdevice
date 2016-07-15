@@ -194,8 +194,8 @@ describe 'centerdevice', ->
 setup_test_env = (env) ->
   process.env.HUBOT_CENTERDEVICE_ROLE = "centerdevice"
   process.env.HUBOT_DEPLOYMENT_SILENCE_DURATION = "10m"
-  process.env.HUBOT_CENTERDEVICE_LOG_LEVEL = "debug"
-  process.env.HUBOT_BOSUN_TIMEOUT = 100
+  process.env.HUBOT_CENTERDEVICE_LOG_LEVEL = "error"
+  process.env.HUBOT_CENTERDEVICE_BOSUN_TIMEOUT = 100
 
   helper = new Helper('../src/centerdevice.coffee')
   room = helper.createRoom()
