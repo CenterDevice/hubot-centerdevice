@@ -12,8 +12,6 @@
 #
 # Todos:
 # - Use Cases:
-#   - starting centerdevice deployment
-#     - carl: Okay, let me silence Bosun -> emit silence, save silence id, user in brain
 #   - finished centerdevice deployment
 #     - carl: Okay, I clear the silence -> emit clear silence with saved id
 #   - Silence expired
@@ -61,25 +59,27 @@ module.exports = (robot) ->
 
         set_timeout event_name, robot.brain, res
 
+
   robot.respond /finished centerdevice deployment/i, (res) ->
     if is_authorized robot, res
       user_name = res.envelope.user.name
       logger.info "#{module_name}: finished deployment requested by #{user_name}."
 
       event_name = "bosun.clear_silence"
-      unless robot.brain.get "centerdevice.bosun.silence.silence_id"
+      unless (robot.brain.get "centerdevice.bosun.set_silence.silence_id")?
         res.reply "Hm, there's no active Bosun silence. You're sure there's a deployment going on?"
       else
-        res.reply "Ok, let clear the Bosun silence for your deployment ..."
+        res.reply "Ok, let me clear the Bosun silence for your deployment ..."
 
-        prepare_timeout event_name robot.brain
-        logger.debug "#{module_name}: emitting request for Bosun clear silence."
+        prepare_timeout event_name, robot.brain
+        logger.debug "#{module_name}: emitting request for Bosun to clear silence."
         robot.emit event_name,
           user: res.envelope.user
           room: res.envelope.room
           silence_id: robot.brain.set "centerdevice.#{event_name}.silence_id"
 
-        set_timeout event_name robot.brain, res
+        set_timeout event_name, robot.brain, res
+
 
   robot.on 'bosun.set_silence.successful', (event) ->
     event_name = "bosun.set_silence"
@@ -88,7 +88,7 @@ module.exports = (robot) ->
       clear_timeout event_name, robot.brain
 
       robot.brain.set "centerdevice.#{event_name}.silence_id", event.silence_id
-      robot.reply {room: event.room, user: event.user}, "Set Bosun silence successful for #{event.duration} with id #{event.silence_id}."
+      robot.reply {room: event.room, user: event.user}, "Set Bosun silence successfully for #{event.duration} with id #{event.silence_id}."
 
 
   robot.on 'bosun.set_silence.failed', (event) ->
@@ -98,6 +98,27 @@ module.exports = (robot) ->
       clear_timeout event_name, robot.brain
 
       robot.reply {room: event.room, user: event.user}, "Oouch: Failed to set Bosun silence because #{event.message}"
+
+
+  robot.on 'bosun.clear_silence.successful', (event) ->
+    event_name = "bosun.clear_silence"
+    if robot.brain.get "centerdevice.#{event_name}.pending"
+      logger.debug "#{module_name}: Cleared Bosun silence successfully with id #{event.silence_id}."
+      clear_timeout event_name, robot.brain
+
+      robot.brain.remove "centerdevice.bosun.set_silence.silence_id"
+      robot.reply {room: event.room, user: event.user}, "Cleared Bosun silence successfully with id #{event.silence_id}."
+
+
+  robot.on 'bosun.clear_silence.failed', (event) ->
+    event_name = "bosun.clear_silence"
+    if robot.brain.get "centerdevice.#{event_name}.pending"
+      logger.debug "#{module_name}: Oouch: Failed to clear Bosun with id #{event.silence_id} silence because #{event.message}"
+      clear_timeout event_name, robot.brain
+
+      robot.brain.remove "centerdevice.bosun.set_silence.silence_id"
+      robot.reply {room: event.room, user: event.user}, "Oouch: Failed to clear Bosun silence with id #{event.silence_id}, because #{event.message} Please talk directly to Bosun to clear the silence."
+
 
 
   robot.error (err, res) ->
