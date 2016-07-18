@@ -33,6 +33,7 @@ config =
 logger = new Log config.log_level
 logger.notice "#{module_name}: Started."
 
+Timers = {}
 
 
 module.exports = (robot) ->
@@ -54,9 +55,10 @@ module.exports = (robot) ->
           user: res.envelope.user
           room: res.envelope.room
           duration: config.deployment_silence_duration
-          alert: ""
-          tags: ""
-          message: ""
+          # TODO: Set these from variables
+          alert: "lukas.test"
+          tags: "host=muffin,service=lukas"
+          message: "I need some rest"
 
         set_timeout event_name, robot.brain, res
 
@@ -84,6 +86,7 @@ module.exports = (robot) ->
 
   robot.on 'bosun.set_silence.successful', (event) ->
     event_name = "bosun.set_silence"
+    logger.debug "#{module_name}: Received event #{event_name}."
     if robot.brain.get "centerdevice.#{event_name}.pending"
       logger.debug "#{module_name}: Set Bosun silence successful for #{event.duration} with id #{event.silence_id}."
       clear_timeout event_name, robot.brain
@@ -96,6 +99,7 @@ module.exports = (robot) ->
 
   robot.on 'bosun.set_silence.failed', (event) ->
     event_name = "bosun.set_silence"
+    logger.debug "#{module_name}: Received event #{event_name}."
     if robot.brain.get "centerdevice.#{event_name}.pending"
       logger.debug "#{module_name}: Oouch: Failed to set Bosun silence because #{event.message}"
       clear_timeout event_name, robot.brain
@@ -105,6 +109,7 @@ module.exports = (robot) ->
 
   robot.on 'bosun.clear_silence.successful', (event) ->
     event_name = "bosun.clear_silence"
+    logger.debug "#{module_name}: Received event #{event_name}."
     if robot.brain.get "centerdevice.#{event_name}.pending"
       logger.debug "#{module_name}: Cleared Bosun silence successfully with id #{event.silence_id}."
       clear_timeout event_name, robot.brain
@@ -115,6 +120,7 @@ module.exports = (robot) ->
 
   robot.on 'bosun.clear_silence.failed', (event) ->
     event_name = "bosun.clear_silence"
+    logger.debug "#{module_name}: Received event #{event_name}."
     if robot.brain.get "centerdevice.#{event_name}.pending"
       logger.debug "#{module_name}: Oouch: Failed to clear Bosun with id #{event.silence_id} silence because #{event.message}"
       clear_timeout event_name, robot.brain
@@ -124,6 +130,8 @@ module.exports = (robot) ->
 
 
   robot.on 'bosun.check_silence.result', (event) ->
+    event_name = "bosun.check_silence.result"
+    logger.debug "#{module_name}: Received event #{event_name}."
     if event.active
       logger.debug "#{module_name}: currently set silence is still active."
       set_silence_checker event, robot
@@ -142,12 +150,14 @@ module.exports = (robot) ->
 
 
 prepare_timeout = (name, brain) ->
+  logger.debug "#{module_name}: Preparing timeout for #{name}."
   brain.set "centerdevice.#{name}.pending", true
 
 set_timeout = (name, brain, res) ->
+  logger.debug "#{module_name}: Setting timeout for #{name}."
   if brain.get "centerdevice.#{name}.pending"
-    logger.debug "#{module_name}: setting timeout for Bosun silence for #{config.timeout} ms."
-    brain.set "centerdevice.#{name}.timeout", setTimeout () ->
+    logger.debug "#{module_name}: Setting timeout for Bosun silence for #{config.timeout} ms."
+    Timers["#{name}_timeout"] = setTimeout () ->
       logger.debug "#{module_name}: Ouuch, request for #{name} timed out ... sorry."
 
       brain.remove "centerdevice.#{name}.pending"
@@ -157,21 +167,26 @@ set_timeout = (name, brain, res) ->
     , config.timeout
 
 clear_timeout = (name, brain) ->
+  logger.debug "#{module_name}: Clearing timeout for #{name}."
   brain.remove "centerdevice.#{name}.pending"
+  delete Timers["#{name}_timeout"]
   clearTimeout brain.get "centerdevice.#{name}.timeout"
   brain.remove "centerdevice.#{name}.timeout"
 
 set_silence_checker = (context, robot) ->
+  logger.debug "#{module_name}: Setting silence checker for #{context}."
   active_silence_id = robot.brain.get "centerdevice.bosun.set_silence.silence_id"
   if active_silence_id is context.silence_id
     logger.debug "#{module_name}: setting timeout for Bosun silence checker #{config.silence_check_interval} ms."
-    robot.brain.set "centerdevice.set_silence.checker.timeout", setTimeout () ->
+    # robot.brain.set "centerdevice.set_silence.checker.timeout", setTimeout () ->
+    Timers["set_silence_checker_timeout"] = setTimeout () ->
       logger.debug "#{module_name}: Emitting request to Bosun to check if silence with id #{context.silence_id} is still active."
       robot.emit 'bosun.check_silence', context
     , config.silence_check_interval
 
 clear_silence_checker = (brain) ->
-  clearTimeout robot.brain.get "centerdevice.set_silence.checker.timeout"
+  logger.debug "#{module_name}: Clearing silence checker."
+  delete Timers["set_silence_checker_timeout"]
   robot.brain.remove "centerdevice.set_silence.checker.timeout"
 
 is_authorized = (robot, res) ->
