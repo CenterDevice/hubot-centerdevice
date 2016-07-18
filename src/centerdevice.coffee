@@ -129,16 +129,29 @@ module.exports = (robot) ->
       robot.reply {room: event.room, user: event.user}, "Oouch: Failed to clear Bosun silence with id #{event.silence_id}, because #{event.message} Please talk directly to Bosun to clear the silence."
 
 
-  robot.on 'bosun.result.check_silence', (event) ->
-    logger.debug "#{module_name}: Received event bosun.result.check_silence."
+  robot.on 'bosun.result.check_silence.successful', (event) ->
+    logger.debug "#{module_name}: Received event bosun.result.check_silence.successful."
     if event.active
       logger.debug "#{module_name}: currently set silence is still active."
       set_silence_checker event, robot
     else
       logger.debug "#{module_name}: currently set silence became inactive."
       clear_silence_checker
+      robot.brain.remove "centerdevice.set_silence.checker.failed_retries"
       robot.brain.remove "centerdevice.bosun.set_silence.silence_id"
       robot.reply {room: event.room, user: event.user}, "Hey, your Bosun silence with id #{event.silence_id} expired, but it seems you're stil deploying?! Are you okay?"
+
+  robot.on 'bosun.result.check_silence.failed', (event) ->
+    logger.debug "#{module_name}: Received event bosun.result.check_silence.failed."
+    retries = robot.brain.get "centerdevice.set_silence.checker.failed_retries" or 0
+    if retries < 3
+      logger.info "#{module_name}: Reactivating silence checker."
+      retries = robot.brain.set "centerdevice.set_silence.checker.failed_retries", (retries + 1)
+      set_silence_checker event, robot
+    else
+      logger.info "#{module_name}: Giving up on silence checker."
+      robot.brain.remove "centerdevice.set_silence.checker.failed_retries"
+      clear_silence_checker
 
 
   robot.error (err, res) ->
@@ -186,7 +199,6 @@ clear_silence_checker = (brain) ->
   logger.debug "#{module_name}: Clearing silence checker."
   clearTimeout Timers["set_silence_checker_timeout"]
   delete Timers["set_silence_checker_timeout"]
-  robot.brain.remove "centerdevice.set_silence.checker.timeout"
 
 is_authorized = (robot, res) ->
   user = res.envelope.user

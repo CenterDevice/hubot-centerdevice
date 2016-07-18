@@ -57,7 +57,7 @@ describe 'centerdevice', ->
                 duration: "1s"
                 silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
             @room.robot.on 'bosun.check_silence', (event) ->
-              robot.emit 'bosun.result.check_silence',
+              robot.emit 'bosun.result.check_silence.successful',
                 user: event.user
                 room: event.room
                 silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
