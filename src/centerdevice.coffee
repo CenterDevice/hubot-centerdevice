@@ -10,6 +10,7 @@
 #
 # Commands:
 #   start(ing) centerdevice deployment -- automatically sets Bosun silence for `HUBOT_DEPLOYMENT_SILENCE_DURATION`
+#   start(ing) centerdevice deployment because <message> -- automatically sets Bosun silence for `HUBOT_DEPLOYMENT_SILENCE_DURATION` with <message>
 #   finish(ed) centerdevice deployment -- automatically clears previously created Bosun silence
 #
 # Notes:
@@ -24,7 +25,9 @@ moment = require 'moment'
 module_name = "hubot-centerdevice"
 
 config =
-  deployment_silence_duration: process.env.HUBOT_DEPLOYMENT_SILENCE_DURATION or "15m"
+  deployment_bosun_alert: process.env.HUBOT_CENTERDEVICE_DEPLOYMENT_BOSUN_ALERT or ""
+  deployment_bosun_tags: process.env.HUBOT_CENTERDEVICE_DEPLOYMENT_BOSUN_TAGS or ""
+  deployment_silence_duration: process.env.HUBOT_CENTERDEVICE_DEPLOYMENT_SILENCE_DURATION or "15m"
   log_level: process.env.HUBOT_CENTERDEVICE_LOG_LEVEL or "info"
   role: process.env.HUBOT_CENTERDEVICE_ROLE
   silence_check_interval: if process.env.HUBOT_CENTERDEVICE_SILENCE_CHECK_INTERVAL then parseInt process.env.HUBOT_CENTERDEVICE_SILENCE_CHECK_INTERVAL else 60000
@@ -38,7 +41,14 @@ Timers = {}
 
 module.exports = (robot) ->
 
-  robot.respond /start.* centerdevice deployment/i, (res) ->
+  robot.respond /start.* centerdevice deployment$/i, (res) ->
+    start_deployment res, "deployment"
+
+  robot.respond /start.* centerdevice deployment because (.*)/i, (res) ->
+    message = res.match[1]
+    start_deployment res, message
+
+  start_deployment = (res, message) ->
     if is_authorized robot, res
       user_name = res.envelope.user.name
       logger.info "#{module_name}: starting deployment requested by #{user_name}."
@@ -47,7 +57,7 @@ module.exports = (robot) ->
       if silence_id = robot.brain.get "centerdevice.#{event_name}.silence_id"
         res.reply "Ouuch, there's already a deployment silence with id #{silence_id} pending. Finish that deployment and ask Bosun for active silences."
       else
-        res.reply "Ok, let me silence Bosun for your deployment ..."
+        res.reply "Ok, let me silence Bosun because #{message} ..."
 
         prepare_timeout event_name, robot.brain
         logger.debug "#{module_name}: emitting request for Bosun silence."
@@ -55,10 +65,9 @@ module.exports = (robot) ->
           user: res.envelope.user
           room: res.envelope.room
           duration: config.deployment_silence_duration
-          # TODO: Set these from variables
-          alert: "lukas.test"
-          tags: "host=muffin,service=lukas"
-          message: "I need some rest"
+          alert: config.deployment_bosun_alert
+          tags: config.deployment_bosun_tags
+          message: message
 
         set_timeout event_name, robot.brain, res
 
