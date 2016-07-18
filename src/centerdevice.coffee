@@ -12,6 +12,10 @@
 #   start(ing) centerdevice deployment -- automatically sets Bosun silence for `HUBOT_DEPLOYMENT_SILENCE_DURATION`
 #   start(ing) centerdevice deployment because <message> -- automatically sets Bosun silence for `HUBOT_DEPLOYMENT_SILENCE_DURATION` with <message>
 #   finish(ed) centerdevice deployment -- automatically clears previously created Bosun silence
+#   set centerdevice deployment alert to (.*) -- sets alert to silence; default is `HUBOT_CENTERDEVICE_DEPLOYMENT_BOSUN_ALERT`
+#   get centerdevice deployment alert -- gets alert to silence
+#   set centerdevice deployment tags to (.*) -- sets tags to silence; default is `HUBOT_CENTERDEVICE_DEPLOYMENT_BOSUN_TAGS`
+#   get centerdevice deployment tags -- gets tags to silence
 #
 # Notes:
 #
@@ -41,6 +45,44 @@ Timers = {}
 
 module.exports = (robot) ->
 
+  robot.respond /set centerdevice deployment alert to (.*)/i, (res) ->
+    if is_authorized robot, res
+      user_name = res.envelope.user.name
+      alert = res.match[1]
+      logger.info "#{module_name}: setting deployment alert to '#{alert}' requested by #{user_name}."
+      if robot.brain.set "centerdevice.config.alert", alert
+        res.reply "Yay. I just set the deployment alert to silence to '#{alert}'. Happy deploying!"
+      else
+        res.reply "Mah, my brain hurts. I could not change the deployment alert ... Sorry!?"
+
+
+  robot.respond /get centerdevice deployment alert/i, (res) ->
+    if is_authorized robot, res
+      user_name = res.envelope.user.name
+      logger.info "#{module_name}: getting deployment alert requested by #{user_name}."
+      alert = if a = robot.brain.get "centerdevice.config.alert" then a else config.deployment_bosun_alert
+      res.reply "Ja, the current deployment alert to silence is '#{alert}'. Hope, that helps."
+
+
+  robot.respond /set centerdevice deployment tags to (.*)/i, (res) ->
+    if is_authorized robot, res
+      user_name = res.envelope.user.name
+      tags = res.match[1]
+      logger.info "#{module_name}: setting deployment tags to '#{tags}' requested by #{user_name}."
+      if robot.brain.set "centerdevice.config.tags", tags
+        res.reply "Yay. I just set the deployment tags to silence to '#{tags}'. Happy deploying!"
+      else
+        res.reply "Mah, my brain hurts. I could not change the deployment tags ... Sorry!?"
+
+
+  robot.respond /get centerdevice deployment tags/i, (res) ->
+    if is_authorized robot, res
+      user_name = res.envelope.user.name
+      logger.info "#{module_name}: getting deployment tags by #{user_name}."
+      tags = if t = robot.brain.get "centerdevice.config.tags" then t else config.deployment_bosun_tags
+      res.reply "Ja, the current deployment tags to silence are '#{tags}'. Hope, that helps."
+
+
   robot.respond /start.* centerdevice deployment$/i, (res) ->
     start_deployment res, "deployment"
 
@@ -65,8 +107,8 @@ module.exports = (robot) ->
           user: res.envelope.user
           room: res.envelope.room
           duration: config.deployment_silence_duration
-          alert: config.deployment_bosun_alert
-          tags: config.deployment_bosun_tags
+          alert: robot.brain.get "centerdevice.config.alert" or config.deployment_bosun_alert
+          tags: robot.brain.get "centerdevice.config.tags" or config.deployment_bosun_tags
           message: message
 
         set_timeout event_name, robot.brain, res

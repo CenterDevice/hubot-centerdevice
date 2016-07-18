@@ -22,6 +22,64 @@ describe 'centerdevice', ->
 
     context "authorized user", ->
 
+      context "deployment alert", ->
+
+        it "set deployment alert to silence", ->
+          @room.user.say('alice', '@hubot set centerdevice deployment alert to bla.blupp').then =>
+            expect(@room.messages).to.eql [
+              ['alice', '@hubot set centerdevice deployment alert to bla.blupp']
+              ['hubot', "@alice Yay. I just set the deployment alert to silence to 'bla.blupp'. Happy deploying!"]
+            ]
+            expect(@room.robot.brain.get "centerdevice.config.alert" ).to.eql "bla.blupp"
+
+
+        it "get default deployment alert to silence", ->
+          @room.user.say('alice', '@hubot get centerdevice deployment alert').then =>
+            expect(@room.messages).to.eql [
+              ['alice', '@hubot get centerdevice deployment alert']
+              ['hubot', "@alice Ja, the current deployment alert to silence is 'test.lukas'. Hope, that helps."]
+            ]
+
+        context "get deployment alert to silence after setting", ->
+          beforeEach ->
+            @room.robot.brain.set "centerdevice.config.alert", "bla.blupp"
+            @room.user.say 'alice', '@hubot get centerdevice deployment alert'
+
+          it "get", ->
+            expect(@room.messages).to.eql [
+              ['alice', '@hubot get centerdevice deployment alert']
+              ['hubot', "@alice Ja, the current deployment alert to silence is 'bla.blupp'. Hope, that helps."]
+            ]
+
+      context "deployment tags", ->
+
+        it "set deployment tags to silence", ->
+          @room.user.say('alice', '@hubot set centerdevice deployment tags to host=muffin,service=lukas').then =>
+            expect(@room.messages).to.eql [
+              ['alice', '@hubot set centerdevice deployment tags to host=muffin,service=lukas']
+              ['hubot', "@alice Yay. I just set the deployment tags to silence to 'host=muffin,service=lukas'. Happy deploying!"]
+            ]
+            expect(@room.robot.brain.get "centerdevice.config.tags" ).to.eql "host=muffin,service=lukas"
+
+        it "get default deployment tags to silence", ->
+          @room.user.say('alice', '@hubot get centerdevice deployment tags').then =>
+            expect(@room.messages).to.eql [
+              ['alice', '@hubot get centerdevice deployment tags']
+              ['hubot', "@alice Ja, the current deployment tags to silence are 'host=muffin,service=lukas'. Hope, that helps."]
+            ]
+
+        context "get deployment tags to silence after setting", ->
+          beforeEach ->
+            @room.robot.brain.set "centerdevice.config.tags", "host=nuss,service=centerdevice"
+            @room.user.say 'alice', '@hubot get centerdevice deployment tags'
+
+          it "get", ->
+            expect(@room.messages).to.eql [
+              ['alice', '@hubot get centerdevice deployment tags']
+              ['hubot', "@alice Ja, the current deployment tags to silence are 'host=nuss,service=centerdevice'. Hope, that helps."]
+            ]
+
+
       context "start deployment", ->
 
         context "start deployment successfully", ->
