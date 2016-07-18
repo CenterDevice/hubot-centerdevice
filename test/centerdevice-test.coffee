@@ -137,7 +137,7 @@ describe 'centerdevice', ->
               robot.emit 'bosun.result.clear_silence.successful',
                 user: event.user
                 room: event.room
-                silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
+                silence_id: event.silence_id
             co =>
               yield @room.user.say 'alice', '@hubot finished centerdevice deployment'
               yield new Promise.delay 50
@@ -160,7 +160,7 @@ describe 'centerdevice', ->
               robot.emit 'bosun.result.clear_silence.failed',
                 user: event.user
                 room: event.room
-                silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
+                silence_id: event.silence_id
                 message: "Bosun failed."
             co =>
               yield @room.user.say 'alice', '@hubot finished centerdevice deployment'

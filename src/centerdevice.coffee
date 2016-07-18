@@ -69,7 +69,8 @@ module.exports = (robot) ->
       logger.info "#{module_name}: finished deployment requested by #{user_name}."
 
       event_name = "bosun.clear_silence"
-      unless (robot.brain.get "centerdevice.bosun.set_silence.silence_id")?
+      active_silence_id = robot.brain.get "centerdevice.bosun.set_silence.silence_id"
+      unless active_silence_id?
         res.reply "Hm, there's no active Bosun silence. You're sure there's a deployment going on?"
       else
         res.reply "Ok, let me clear the Bosun silence for your deployment ..."
@@ -79,7 +80,7 @@ module.exports = (robot) ->
         robot.emit event_name,
           user: res.envelope.user
           room: res.envelope.room
-          silence_id: robot.brain.set "centerdevice.#{event_name}.silence_id"
+          silence_id: active_silence_id
 
         set_timeout event_name, robot.brain, res
 
@@ -113,6 +114,7 @@ module.exports = (robot) ->
     if robot.brain.get "centerdevice.#{event_name}.pending"
       logger.debug "#{module_name}: Cleared Bosun silence successfully with id #{event.silence_id}."
       clear_timeout event_name, robot.brain
+      clear_silence_checker robot.brain
 
       robot.brain.remove "centerdevice.bosun.set_silence.silence_id"
       robot.reply {room: event.room, user: event.user}, "Cleared Bosun silence successfully with id #{event.silence_id}."
