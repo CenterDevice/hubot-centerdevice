@@ -28,7 +28,7 @@ describe 'centerdevice', ->
           beforeEach ->
             robot = @room.robot
             @room.robot.on 'bosun.set_silence', (event) ->
-              robot.emit 'bosun.set_silence.successful',
+              robot.emit 'bosun.result.set_silence.successful',
                 user: event.user
                 room: event.room
                 duration: "10m"
@@ -51,13 +51,13 @@ describe 'centerdevice', ->
           beforeEach ->
             robot = @room.robot
             @room.robot.on 'bosun.set_silence', (event) ->
-              robot.emit 'bosun.set_silence.successful',
+              robot.emit 'bosun.result.set_silence.successful',
                 user: event.user
                 room: event.room
                 duration: "1s"
                 silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
             @room.robot.on 'bosun.check_silence', (event) ->
-              robot.emit 'bosun.check_silence.result',
+              robot.emit 'bosun.result.check_silence',
                 user: event.user
                 room: event.room
                 silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
@@ -82,7 +82,7 @@ describe 'centerdevice', ->
           beforeEach ->
             robot = @room.robot
             @room.robot.on 'bosun.set_silence', (event) ->
-              robot.emit 'bosun.set_silence.failed',
+              robot.emit 'bosun.result.set_silence.failed',
                 user: event.user
                 room: event.room
                 message: "Bosun failed."
@@ -134,7 +134,7 @@ describe 'centerdevice', ->
             @room.robot.brain.set "centerdevice.bosun.set_silence.silence_id", "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
             robot = @room.robot
             @room.robot.on 'bosun.clear_silence', (event) ->
-              robot.emit 'bosun.clear_silence.successful',
+              robot.emit 'bosun.result.clear_silence.successful',
                 user: event.user
                 room: event.room
                 silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
@@ -157,7 +157,7 @@ describe 'centerdevice', ->
             @room.robot.brain.set "centerdevice.bosun.set_silence.silence_id", "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
             robot = @room.robot
             @room.robot.on 'bosun.clear_silence', (event) ->
-              robot.emit 'bosun.clear_silence.failed',
+              robot.emit 'bosun.result.clear_silence.failed',
                 user: event.user
                 room: event.room
                 silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"

@@ -84,9 +84,9 @@ module.exports = (robot) ->
         set_timeout event_name, robot.brain, res
 
 
-  robot.on 'bosun.set_silence.successful', (event) ->
+  robot.on 'bosun.result.set_silence.successful', (event) ->
+    logger.debug "#{module_name}: Received event bosun.result.set_silence.successful."
     event_name = "bosun.set_silence"
-    logger.debug "#{module_name}: Received event #{event_name}."
     if robot.brain.get "centerdevice.#{event_name}.pending"
       logger.debug "#{module_name}: Set Bosun silence successful for #{event.duration} with id #{event.silence_id}."
       clear_timeout event_name, robot.brain
@@ -97,9 +97,9 @@ module.exports = (robot) ->
       set_silence_checker {room: event.room, user: event.user, silence_id: event.silence_id}, robot
 
 
-  robot.on 'bosun.set_silence.failed', (event) ->
+  robot.on 'bosun.result.set_silence.failed', (event) ->
+    logger.debug "#{module_name}: Received event bosun.result.set_silence.failed."
     event_name = "bosun.set_silence"
-    logger.debug "#{module_name}: Received event #{event_name}."
     if robot.brain.get "centerdevice.#{event_name}.pending"
       logger.debug "#{module_name}: Oouch: Failed to set Bosun silence because #{event.message}"
       clear_timeout event_name, robot.brain
@@ -107,9 +107,9 @@ module.exports = (robot) ->
       robot.reply {room: event.room, user: event.user}, "Oouch: Failed to set Bosun silence because #{event.message}"
 
 
-  robot.on 'bosun.clear_silence.successful', (event) ->
+  robot.on 'bosun.result.clear_silence.successful', (event) ->
+    logger.debug "#{module_name}: Received event bosun.result.clear_silence.successful."
     event_name = "bosun.clear_silence"
-    logger.debug "#{module_name}: Received event #{event_name}."
     if robot.brain.get "centerdevice.#{event_name}.pending"
       logger.debug "#{module_name}: Cleared Bosun silence successfully with id #{event.silence_id}."
       clear_timeout event_name, robot.brain
@@ -118,9 +118,9 @@ module.exports = (robot) ->
       robot.reply {room: event.room, user: event.user}, "Cleared Bosun silence successfully with id #{event.silence_id}."
 
 
-  robot.on 'bosun.clear_silence.failed', (event) ->
+  robot.on 'bosun.result.clear_silence.failed', (event) ->
+    logger.debug "#{module_name}: Received event bosun.result.clear_silence.failed."
     event_name = "bosun.clear_silence"
-    logger.debug "#{module_name}: Received event #{event_name}."
     if robot.brain.get "centerdevice.#{event_name}.pending"
       logger.debug "#{module_name}: Oouch: Failed to clear Bosun with id #{event.silence_id} silence because #{event.message}"
       clear_timeout event_name, robot.brain
@@ -129,9 +129,8 @@ module.exports = (robot) ->
       robot.reply {room: event.room, user: event.user}, "Oouch: Failed to clear Bosun silence with id #{event.silence_id}, because #{event.message} Please talk directly to Bosun to clear the silence."
 
 
-  robot.on 'bosun.check_silence.result', (event) ->
-    event_name = "bosun.check_silence.result"
-    logger.debug "#{module_name}: Received event #{event_name}."
+  robot.on 'bosun.result.check_silence', (event) ->
+    logger.debug "#{module_name}: Received event bosun.result.check_silence."
     if event.active
       logger.debug "#{module_name}: currently set silence is still active."
       set_silence_checker event, robot
