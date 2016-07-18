@@ -160,7 +160,7 @@ set_timeout = (name, brain, res) ->
       logger.debug "#{module_name}: Ouuch, request for #{name} timed out ... sorry."
 
       brain.remove "centerdevice.#{name}.pending"
-      brain.remove "centerdevice.#{name}.timeout"
+      delete Timers["#{name}_timeout"]
 
       res.reply "Ouuch, request for #{name} timed out ... sorry."
     , config.timeout
@@ -168,8 +168,8 @@ set_timeout = (name, brain, res) ->
 clear_timeout = (name, brain) ->
   logger.debug "#{module_name}: Clearing timeout for #{name}."
   brain.remove "centerdevice.#{name}.pending"
+  clearTimeout Timers["#{name}_timeout"]
   delete Timers["#{name}_timeout"]
-  clearTimeout brain.get "centerdevice.#{name}.timeout"
   brain.remove "centerdevice.#{name}.timeout"
 
 set_silence_checker = (context, robot) ->
@@ -177,7 +177,6 @@ set_silence_checker = (context, robot) ->
   active_silence_id = robot.brain.get "centerdevice.bosun.set_silence.silence_id"
   if active_silence_id is context.silence_id
     logger.debug "#{module_name}: setting timeout for Bosun silence checker #{config.silence_check_interval} ms."
-    # robot.brain.set "centerdevice.set_silence.checker.timeout", setTimeout () ->
     Timers["set_silence_checker_timeout"] = setTimeout () ->
       logger.debug "#{module_name}: Emitting request to Bosun to check if silence with id #{context.silence_id} is still active."
       robot.emit 'bosun.check_silence', context
@@ -185,6 +184,7 @@ set_silence_checker = (context, robot) ->
 
 clear_silence_checker = (brain) ->
   logger.debug "#{module_name}: Clearing silence checker."
+  clearTimeout Timers["set_silence_checker_timeout"]
   delete Timers["set_silence_checker_timeout"]
   robot.brain.remove "centerdevice.set_silence.checker.timeout"
 
