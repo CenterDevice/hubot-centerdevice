@@ -23,6 +23,7 @@
 #   lukas.pustina@centerdevice.de
 #
 # Todos:
+# - Readme
 
 Log = require 'log'
 moment = require 'moment'
