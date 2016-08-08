@@ -86,11 +86,17 @@ describe 'centerdevice', ->
           beforeEach ->
             robot = @room.robot
             @room.robot.on 'bosun.set_silence', (event) ->
-              robot.emit 'bosun.result.set_silence.successful',
-                user: event.user
-                room: event.room
-                duration: "10m"
-                silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
+              if event.alert? and event.tags?
+                robot.emit 'bosun.result.set_silence.successful',
+                  user: event.user
+                  room: event.room
+                  duration: "10m"
+                  silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
+              else
+                robot.emit 'bosun.result.set_silence.failed',
+                  user: event.user
+                  room: event.room
+                  message: "Alert ('#{event.alert}') or tags ('#{event.tags}') have not been set correctly."
             co =>
               yield @room.user.say 'alice', '@hubot starting centerdevice deployment'
               yield new Promise.delay 50

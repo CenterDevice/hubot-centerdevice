@@ -29,6 +29,9 @@ Log = require 'log'
 moment = require 'moment'
 module_name = "hubot-centerdevice"
 
+BRAIN_CD_ALERT_KEY = "centerdevice.config.alert"
+BRAIN_CD_TAGS_KEY = "centerdevice.config.tags"
+
 config =
   deployment_bosun_alert: process.env.HUBOT_CENTERDEVICE_DEPLOYMENT_BOSUN_ALERT or ""
   deployment_bosun_tags: process.env.HUBOT_CENTERDEVICE_DEPLOYMENT_BOSUN_TAGS or ""
@@ -51,7 +54,7 @@ module.exports = (robot) ->
       user_name = res.envelope.user.name
       alert = res.match[1]
       logger.info "#{module_name}: setting deployment alert to '#{alert}' requested by #{user_name}."
-      if robot.brain.set "centerdevice.config.alert", alert
+      if robot.brain.set BRAIN_CD_ALERT_KEY, alert
         res.reply "Yay. I just set the deployment alert to silence to '#{alert}'. Happy deploying!"
       else
         res.reply "Mah, my brain hurts. I could not change the deployment alert ... Sorry!?"
@@ -61,7 +64,7 @@ module.exports = (robot) ->
     if is_authorized robot, res
       user_name = res.envelope.user.name
       logger.info "#{module_name}: getting deployment alert requested by #{user_name}."
-      alert = if a = robot.brain.get "centerdevice.config.alert" then a else config.deployment_bosun_alert
+      alert = if a = robot.brain.get BRAIN_CD_ALERT_KEY then a else config.deployment_bosun_alert
       res.reply "Ja, the current deployment alert to silence is '#{alert}'. Hope, that helps."
 
 
@@ -70,7 +73,7 @@ module.exports = (robot) ->
       user_name = res.envelope.user.name
       tags = res.match[1]
       logger.info "#{module_name}: setting deployment tags to '#{tags}' requested by #{user_name}."
-      if robot.brain.set "centerdevice.config.tags", tags
+      if robot.brain.set BRAIN_CD_TAGS_KEY, tags
         res.reply "Yay. I just set the deployment tags to silence to '#{tags}'. Happy deploying!"
       else
         res.reply "Mah, my brain hurts. I could not change the deployment tags ... Sorry!?"
@@ -80,7 +83,7 @@ module.exports = (robot) ->
     if is_authorized robot, res
       user_name = res.envelope.user.name
       logger.info "#{module_name}: getting deployment tags by #{user_name}."
-      tags = if t = robot.brain.get "centerdevice.config.tags" then t else config.deployment_bosun_tags
+      tags = if t = robot.brain.get BRAIN_CD_TAGS_KEY then t else config.deployment_bosun_tags
       res.reply "Ja, the current deployment tags to silence are '#{tags}'. Hope, that helps."
 
 
@@ -108,8 +111,8 @@ module.exports = (robot) ->
           user: res.envelope.user
           room: res.envelope.room
           duration: config.deployment_silence_duration
-          alert: robot.brain.get "centerdevice.config.alert" or config.deployment_bosun_alert
-          tags: robot.brain.get "centerdevice.config.tags" or config.deployment_bosun_tags
+          alert: robot.brain.get(BRAIN_CD_ALERT_KEY) or config.deployment_bosun_alert
+          tags: robot.brain.get(BRAIN_CD_TAGS_KEY) or config.deployment_bosun_tags
           message: message
 
         set_timeout event_name, robot.brain, res
@@ -197,7 +200,7 @@ module.exports = (robot) ->
 
   robot.on 'bosun.result.check_silence.failed', (event) ->
     logger.debug "#{module_name}: Received event bosun.result.check_silence.failed."
-    retries = robot.brain.get "centerdevice.set_silence.checker.failed_retries" or 0
+    retries = robot.brain.get("centerdevice.set_silence.checker.failed_retries") or 0
     if retries < 3
       logger.info "#{module_name}: Reactivating silence checker."
       retries = robot.brain.set "centerdevice.set_silence.checker.failed_retries", (retries + 1)
