@@ -1,7 +1,7 @@
 {
   "name": "hubot-centerdevice",
   "description": "DevOps for CenterDevice",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "lukas.pustina@centerdevice.de",
   "license": "MIT",
   "keywords": "hubot, centerdevice",
