@@ -39,6 +39,7 @@ config =
   log_level: process.env.HUBOT_CENTERDEVICE_LOG_LEVEL or "info"
   role: process.env.HUBOT_CENTERDEVICE_ROLE
   silence_check_interval: if process.env.HUBOT_CENTERDEVICE_SILENCE_CHECK_INTERVAL then parseInt process.env.HUBOT_CENTERDEVICE_SILENCE_CHECK_INTERVAL else 60000
+  silence_clear_delay: if process.env.HUBOT_CENTERDEVICE_SILENCE_CLEAR_DELAY then parseInt process.env.HUBOT_CENTERDEVICE_SILENCE_CLEAR_DELAY else 300000
   timeout: if process.env.HUBOT_CENTERDEVICE_BOSUN_TIMEOUT then parseInt process.env.HUBOT_CENTERDEVICE_BOSUN_TIMEOUT else 30000
 
 logger = new Log config.log_level
@@ -128,16 +129,19 @@ module.exports = (robot) ->
       unless active_silence_id?
         res.reply "Hm, there's no active Bosun silence. You're sure there's a deployment going on?"
       else
-        res.reply "Ok, let me clear the Bosun silence for your deployment ..."
+        res.reply "Ok, I'll clear the Bosun silence for your deployment in #{config.silence_clear_delay / 60000} min so Bosun can calm down ..."
 
-        prepare_timeout event_name, robot.brain
-        logger.debug "#{module_name}: emitting request for Bosun to clear silence."
-        robot.emit event_name,
-          user: res.envelope.user
-          room: res.envelope.room
-          silence_id: active_silence_id
+        setTimeout () ->
+          res.reply "Trying to clear Bosun silence for your deployment."
+          prepare_timeout event_name, robot.brain
+          logger.debug "#{module_name}: emitting request for Bosun to clear silence."
+          robot.emit event_name,
+            user: res.envelope.user
+            room: res.envelope.room
+            silence_id: active_silence_id
 
-        set_timeout event_name, robot.brain, res
+          set_timeout event_name, robot.brain, res
+        , config.silence_clear_delay
 
 
   robot.on 'bosun.result.set_silence.successful', (event) ->
