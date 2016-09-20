@@ -158,7 +158,7 @@ describe 'centerdevice', ->
               ['alice', '@hubot starting centerdevice deployment']
               ['hubot', '@alice Set Bosun silence successfully for 1s with id 6e89533c74c3f9b74417b37e7cce75c384d29dc7.']
               ['hubot', '@alice Ok, let me silence Bosun because deployment ...']
-              ['hubot', "@alice Hey, your Bosun silence with id 6e89533c74c3f9b74417b37e7cce75c384d29dc7 expired, but it seems you're stil deploying?! Are you okay?"]
+              ['hubot', "@alice Hey, your Bosun silence with id 6e89533c74c3f9b74417b37e7cce75c384d29dc7 expired, but it seems you're still deploying?! Are you okay?"]
             ]
             expect(@room.robot.brain.get "centerdevice.bosun.set_silence.silence_id" ).to.eql null
             expect(@room.robot.brain.get "centerdevice.bosun.set_silence.timeout" ).to.eql null
@@ -240,6 +240,45 @@ describe 'centerdevice', ->
             expect(@room.robot.brain.get "centerdevice.bosun.clear_silence.timeout" ).to.eql null
             expect(@room.robot.brain.get "centerdevice.bosun.clear_silence.pending" ).to.eql null
 
+        context "finish deployment with delay running out after silence becomes inactive", ->
+          beforeEach ->
+            robot = @room.robot
+            @room.robot.on 'bosun.set_silence', (event) ->
+              robot.emit 'bosun.result.set_silence.successful',
+                user: event.user
+                room: event.room
+                duration: "1s"
+                silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
+            @room.robot.on 'bosun.check_silence', (event) ->
+              robot.emit 'bosun.result.check_silence.successful',
+                user: event.user
+                room: event.room
+                silence_id: "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
+                active: false
+            @room.robot.on 'bosun.clear_silence', (event) ->
+              robot.emit 'bosun.result.clear_silence.successful',
+                user: event.user
+                room: event.room
+                silence_id: event.silence_id
+            co =>
+              yield @room.user.say 'alice', '@hubot starting centerdevice deployment'
+              yield @room.user.say 'alice', '@hubot finish centerdevice deployment'
+              yield new Promise.delay 1100
+
+          it "start deployment", ->
+            expect(@room.messages).to.eql [
+              ['alice', '@hubot starting centerdevice deployment']
+              ['hubot', '@alice Set Bosun silence successfully for 1s with id 6e89533c74c3f9b74417b37e7cce75c384d29dc7.']
+              ['hubot', '@alice Ok, let me silence Bosun because deployment ...']
+              ['alice', '@hubot finish centerdevice deployment']
+              ['hubot', "@alice Ok, I'll clear the Bosun silence for your deployment in #{process.env.HUBOT_CENTERDEVICE_SILENCE_CLEAR_DELAY / 60000} min so Bosun can calm down ..."]
+              ['hubot', '@alice Cleared Bosun silence successfully with id 6e89533c74c3f9b74417b37e7cce75c384d29dc7.']
+              ['hubot', '@alice Trying to clear Bosun silence for your deployment.']
+            ]
+            expect(@room.robot.brain.get "centerdevice.bosun.set_silence.silence_id" ).to.eql null
+            expect(@room.robot.brain.get "centerdevice.bosun.set_silence.timeout" ).to.eql null
+            expect(@room.robot.brain.get "centerdevice.bosun.set_silence.pending" ).to.eql null
+
         context "finish deployment failed", ->
           beforeEach ->
             @room.robot.brain.set "centerdevice.bosun.set_silence.silence_id", "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
@@ -290,7 +329,7 @@ describe 'centerdevice', ->
               ['hubot', '@alice Trying to clear Bosun silence for your deployment.']
               ['hubot', '@alice Ouuch, request for bosun.clear_silence timed out ... sorry.']
             ]
-            expect(@room.robot.brain.get "centerdevice.bosun.set_silence.silence_id" ).to.eql "6e89533c74c3f9b74417b37e7cce75c384d29dc7"
+            expect(@room.robot.brain.get "centerdevice.bosun.set_silence.silence_id" ).to.eql null
             expect(@room.robot.brain.get "centerdevice.bosun.clear_silence.timeout" ).to.eql null
             expect(@room.robot.brain.get "centerdevice.bosun.clear_silence.pending" ).to.eql null
 
