@@ -102,6 +102,7 @@ describe 'centerdevice', ->
               yield new Promise.delay 50
 
           it "start deployment", ->
+            @room.messages.splice(2,1) # Remove random bullshit msg
             expect(@room.messages).to.eql [
               ['alice', '@hubot starting centerdevice deployment']
               ['hubot', '@alice Set Bosun silence successfully for 10m with id 6e89533c74c3f9b74417b37e7cce75c384d29dc7.']
@@ -125,6 +126,7 @@ describe 'centerdevice', ->
               yield new Promise.delay 50
 
           it "start deployment", ->
+            @room.messages.splice(2,1) # Remove random bullshit msg
             expect(@room.messages).to.eql [
               ['alice', "@hubot starting centerdevice deployment because I'm bored"]
               ['hubot', '@alice Set Bosun silence successfully for 10m with id 6e89533c74c3f9b74417b37e7cce75c384d29dc7.']
@@ -154,6 +156,7 @@ describe 'centerdevice', ->
               yield new Promise.delay 1100
 
           it "start deployment", ->
+            @room.messages.splice(2,1) # Remove random bullshit msg
             expect(@room.messages).to.eql [
               ['alice', '@hubot starting centerdevice deployment']
               ['hubot', '@alice Set Bosun silence successfully for 1s with id 6e89533c74c3f9b74417b37e7cce75c384d29dc7.']
@@ -178,6 +181,7 @@ describe 'centerdevice', ->
               yield new Promise.delay 50
 
           it "start deployment", ->
+            @room.messages.splice(2,1) # Remove random bullshit msg
             expect(@room.messages).to.eql [
               ['alice', '@hubot starting centerdevice deployment']
               ['hubot', '@alice Oouch: Failed to set Bosun silence because Bosun failed.']
@@ -205,6 +209,7 @@ describe 'centerdevice', ->
               yield new Promise.delay 200
 
           it "start deployment", ->
+            @room.messages.splice(1,1) # Remove random bullshit msg
             expect(@room.messages).to.eql [
               ['alice', '@hubot starting centerdevice deployment']
               ['hubot', '@alice Ok, let me silence Bosun because deployment ...']
@@ -266,6 +271,7 @@ describe 'centerdevice', ->
               yield new Promise.delay 1100
 
           it "start deployment", ->
+            @room.messages.splice(2,1) # Remove random bullshit msg
             expect(@room.messages).to.eql [
               ['alice', '@hubot starting centerdevice deployment']
               ['hubot', '@alice Set Bosun silence successfully for 1s with id 6e89533c74c3f9b74417b37e7cce75c384d29dc7.']

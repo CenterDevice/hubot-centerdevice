@@ -104,6 +104,7 @@ module.exports = (robot) ->
       if silence_id = robot.brain.get "centerdevice.#{event_name}.silence_id"
         res.reply "Ouuch, there's already a deployment silence with id #{silence_id} pending. Finish that deployment and ask Bosun for active silences."
       else
+        res.reply random_bullshit_msg()
         res.reply "Ok, let me silence Bosun because #{message} ..."
 
         prepare_timeout event_name, robot.brain
@@ -264,6 +265,25 @@ clear_silence = (brain) ->
   clear_silence_checker()
   brain.remove "centerdevice.bosun.set_silence.silence_id"
   brain.remove "centerdevice.set_silence.checker.failed_retries"
+
+random_bullshit_msg = () ->
+  msgs = [
+    "Pleaaase nooooo, not again!"
+    "Be gentle, it still hurts from last time ..."
+    "How many tries will you need this time?"
+    "Again? You can't get enough!"
+    "Hit me baby one more time."
+    "Oh yeah, I'm ready for you."
+    "This time I want to cuddle first."
+    "At this time? Don't you have friends?"
+    "But waaaaahy?"
+    "As if it would help ..."
+    "Feelin' lucky, punk?"
+    "Fine ..."
+    "Say 'pretty please'!"
+    "Probably"
+    ]
+  msgs[Math.floor(Math.random() * msgs.length)]
 
 is_authorized = (robot, res) ->
   user = res.envelope.user
