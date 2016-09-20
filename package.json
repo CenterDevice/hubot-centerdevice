@@ -1,7 +1,7 @@
 {
   "name": "hubot-centerdevice",
   "description": "DevOps for CenterDevice",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "author": "lukas.pustina@centerdevice.de",
   "license": "MIT",
   "keywords": "hubot, centerdevice",
@@ -13,7 +13,7 @@
     "url": "https://github.com/centerdevice/hubot-centerdevice/issues"
   },
   "dependencies": {
-    "hubot-auth": "^1.3.0",
+    "hubot-auth": "1.3.0",
     "log": "^1.4.0",
     "moment": "^2.14.1"
   },
